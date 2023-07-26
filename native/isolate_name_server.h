@@ -1,4 +1,4 @@
-#include "/usr/lib/dart/include/dart_api_dl.h"
+#include "dart_api_dl.h"
 
 Dart_Handle lookupPortByName(const char* name);
 
