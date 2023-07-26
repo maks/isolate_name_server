@@ -20,6 +20,8 @@ void main() {
   final SendPort sendPort2 = convertNativePortToSendPort(dylib, nativePort);
 
   sendPort2.send("hi from sendport 2");
+
+  exit(0);
 }
 
 SendPort convertNativePortToSendPort(DynamicLibrary dylib, int nativePort) {
@@ -31,12 +33,25 @@ SendPort convertNativePortToSendPort(DynamicLibrary dylib, int nativePort) {
 
 DynamicLibrary _init() {
   // Open the dynamic library
-  String libraryPath = path.join(Directory.current.path, 'returnport_library', 'returnport.so');
+  String libraryPath = path.join(Directory.current.path, 'native', 'libreturnport.so');
   if (Platform.isMacOS) {
-    libraryPath = path.join(Directory.current.path, 'returnport_library', 'returnport.dylib');
+    libraryPath = path.join(Directory.current.path, 'native', 'returnport.dylib');
   }
   if (Platform.isWindows) {
-    libraryPath = path.join(Directory.current.path, 'returnport_library', 'Debug', 'returnport.dll');
+    libraryPath = path.join(Directory.current.path, 'native', 'Debug', 'returnport.dll');
   }
-  return DynamicLibrary.open(libraryPath);
+  final lib = DynamicLibrary.open(libraryPath);
+
+  // need to call this because our native library makes use of dart_api_dl.h, the Dynamically Linked Dart API
+  // this code comes from:
+  // https://github.com/dart-lang/sdk/blob/main/samples/ffi/sample_ffi_functions_callbacks_closures.dart#L55
+  final initializeApi =
+      lib.lookupFunction<IntPtr Function(Pointer<Void>), int Function(Pointer<Void>)>("Dart_InitializeApiDL");
+  final initResult = initializeApi(NativeApi.initializeApiDLData);
+
+  if (initResult != 0) {
+    throw Exception("failed in initialise Dart Native Library Dynamic Link API");
+  }
+  print("finished DL lib init");
+  return lib;
 }
