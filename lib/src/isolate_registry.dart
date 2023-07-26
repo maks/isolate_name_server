@@ -46,6 +46,14 @@ abstract final class IsolateNameServer {
     if (initResult != 0) {
       throw Exception("failed in initialise Dart Native Library Dynamic Link API");
     }
+
+    final initNameServer = lib.lookupFunction<IntPtr Function(), int Function()>("initNameServer");
+
+    final initNSResult = initNameServer();
+    if (initNSResult != 0) {
+      throw Exception("failed in initialise Name Server native lib");
+    }
+
     return lib;
   }
 
@@ -58,7 +66,13 @@ abstract final class IsolateNameServer {
   static SendPort? lookupPortByName(String name) {
     final lookupPortByNamePointer = _dylib.lookup<NativeFunction<_LookupPortByNameFunc>>('lookupPortByName');
     final lookupPortByName = lookupPortByNamePointer.asFunction<_LookupPortByName>();
-    return lookupPortByName(name.toNativeUtf8()) as SendPort;
+    final port = lookupPortByName(name.toNativeUtf8());
+    print("port: $port");
+    if (port != null) {
+      return port as SendPort;
+    } else {
+      return null;
+    }    
   }
 
   /// Registers a [SendPort] with a given name.
@@ -78,7 +92,7 @@ abstract final class IsolateNameServer {
     final registerPortWithNamePointer =
         _dylib.lookup<NativeFunction<_RegisterPortWithNameFunc>>('registerPortWithName');
     final registerPortWithName = registerPortWithNamePointer.asFunction<_RegisterPortWithName>();
-    return registerPortWithName(port.nativePort, name.toNativeUtf8());
+    return registerPortWithName(port.nativePort, name.toNativeUtf8()) == 0;
   }
 
   /// Removes a name-to-[SendPort] mapping given its name.
@@ -96,15 +110,15 @@ abstract final class IsolateNameServer {
     final removePortNameMappingPointer =
         _dylib.lookup<NativeFunction<_RemovePortNameMappingFunc>>('removePortNameMapping');
     final removePortNameMapping = removePortNameMappingPointer.asFunction<_RemovePortNameMapping>();
-    return removePortNameMapping(name.toNativeUtf8());
+    return removePortNameMapping(name.toNativeUtf8()) == 0;
   }
 }
 
 typedef _LookupPortByNameFunc = Handle Function(Pointer<Utf8> name);
-typedef _LookupPortByName = Object Function(Pointer<Utf8> name);
+typedef _LookupPortByName = Object? Function(Pointer<Utf8> name);
 
-typedef _RegisterPortWithNameFunc = Bool Function(Int64 port, Pointer<Utf8> name);
-typedef _RegisterPortWithName = bool Function(int port, Pointer<Utf8> name);
+typedef _RegisterPortWithNameFunc = Int Function(Int64 port, Pointer<Utf8> name);
+typedef _RegisterPortWithName = int Function(int port, Pointer<Utf8> name);
 
-typedef _RemovePortNameMappingFunc = Bool Function(Pointer<Utf8> name);
-typedef _RemovePortNameMapping = bool Function(Pointer<Utf8> name);
+typedef _RemovePortNameMappingFunc = Int Function(Pointer<Utf8> name);
+typedef _RemovePortNameMapping = int Function(Pointer<Utf8> name);

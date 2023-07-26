@@ -9,11 +9,20 @@ void main() async {
   receivePort.listen((message) {
     print("message to recv port:$message");
 
-    receivePort.close(); // we're done, close port so Dart will exit
+    if (message == "goodbye") {
+      receivePort.close(); // we're done, close port so Dart will exit
+    }    
   });
 
-  IsolateNameServer.registerPortWithName(sendPort, "accumulator");
-  print("registered SendPort as accumulator");
+  final portName = "accumulator";
+  IsolateNameServer.registerPortWithName(sendPort, portName);
+  print("registered SendPort as $portName");
 
-  sendPort.send("goodbye");
+  final sendPort2 = IsolateNameServer.lookupPortByName(portName);
+  if (sendPort2 != null) {
+    sendPort2.send("goodbye");
+  } else {
+    throw Exception("could not retrieve named SendPort");
+  }
+  
 }
