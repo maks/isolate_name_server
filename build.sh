@@ -10,7 +10,7 @@ echo Dart SDK location:
 which dart
 
 echo check expected path:
-ls /usr/lib/dart
+ls -R /opt/hostedtoolcache/dart/
 
 gcc -c -Wall -Werror -fpic isolate_name_server.c /usr/lib/dart/include/dart_api_dl.c
 gcc -shared -o libnameserver.so isolate_name_server.o dart_api_dl.o
