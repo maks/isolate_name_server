@@ -15,9 +15,9 @@ void main() {
     print("message to recv port:$message");
   });
 
-  final DynamicLibrary _dylib = _init();
+  final DynamicLibrary dylib = _init();
 
-  final SendPort sendPort2 = convertNativePortToSendPort(_dylib, nativePort);
+  final SendPort sendPort2 = convertNativePortToSendPort(dylib, nativePort);
 
   sendPort2.send("hi from sendport 2");
 }
