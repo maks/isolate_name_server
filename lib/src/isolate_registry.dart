@@ -27,27 +27,32 @@ abstract final class IsolateNameServer {
 
   static DynamicLibrary _init() {
     // Open the dynamic library
-    String libraryPath = path.join(Directory.current.path, 'native', 'libnameserver.so');
+    String libraryPath =
+        path.join(Directory.current.path, 'native', 'libnameserver.so');
     if (Platform.isMacOS) {
-      libraryPath = path.join(Directory.current.path, 'native', 'libnameserver.dylib');
+      libraryPath =
+          path.join(Directory.current.path, 'native', 'libnameserver.dylib');
     }
     if (Platform.isWindows) {
-      libraryPath = path.join(Directory.current.path, 'native', 'Debug', 'libnameserver.dll');
+      libraryPath = path.join(
+          Directory.current.path, 'native', 'Debug', 'libnameserver.dll');
     }
     final lib = DynamicLibrary.open(libraryPath);
     // need to call this because our native library makes use of dart_api_dl.h, the Dynamically Linked Dart API
     // this code comes from:
     // https://github.com/dart-lang/sdk/blob/main/samples/ffi/sample_ffi_functions_callbacks_closures.dart#L55
-    final initializeApi =
-        lib.lookupFunction<IntPtr Function(Pointer<Void>), int Function(Pointer<Void>)>("Dart_InitializeApiDL");
+    final initializeApi = lib.lookupFunction<IntPtr Function(Pointer<Void>),
+        int Function(Pointer<Void>)>("Dart_InitializeApiDL");
 
     final initResult = initializeApi(NativeApi.initializeApiDLData);
 
     if (initResult != 0) {
-      throw Exception("failed in initialise Dart Native Library Dynamic Link API");
+      throw Exception(
+          "failed in initialise Dart Native Library Dynamic Link API");
     }
 
-    final initNameServer = lib.lookupFunction<IntPtr Function(), int Function()>("initNameServer");
+    final initNameServer =
+        lib.lookupFunction<IntPtr Function(), int Function()>("initNameServer");
 
     final initNSResult = initNameServer();
     if (initNSResult != 0) {
@@ -64,15 +69,17 @@ abstract final class IsolateNameServer {
   ///
   /// The `name` argument must not be null.
   static SendPort? lookupPortByName(String name) {
-    final lookupPortByNamePointer = _dylib.lookup<NativeFunction<_LookupPortByNameFunc>>('lookupPortByName');
-    final lookupPortByName = lookupPortByNamePointer.asFunction<_LookupPortByName>();
+    final lookupPortByNamePointer = _dylib
+        .lookup<NativeFunction<_LookupPortByNameFunc>>('lookupPortByName');
+    final lookupPortByName =
+        lookupPortByNamePointer.asFunction<_LookupPortByName>();
     final port = lookupPortByName(name.toNativeUtf8());
     print("port: $port");
     if (port != null) {
       return port as SendPort;
     } else {
       return null;
-    }    
+    }
   }
 
   /// Registers a [SendPort] with a given name.
@@ -90,8 +97,10 @@ abstract final class IsolateNameServer {
   /// The `port` and `name` arguments must not be null.
   static bool registerPortWithName(SendPort port, String name) {
     final registerPortWithNamePointer =
-        _dylib.lookup<NativeFunction<_RegisterPortWithNameFunc>>('registerPortWithName');
-    final registerPortWithName = registerPortWithNamePointer.asFunction<_RegisterPortWithName>();
+        _dylib.lookup<NativeFunction<_RegisterPortWithNameFunc>>(
+            'registerPortWithName');
+    final registerPortWithName =
+        registerPortWithNamePointer.asFunction<_RegisterPortWithName>();
     return registerPortWithName(port.nativePort, name.toNativeUtf8()) == 0;
   }
 
@@ -108,8 +117,10 @@ abstract final class IsolateNameServer {
   /// The `name` argument must not be null.
   static bool removePortNameMapping(String name) {
     final removePortNameMappingPointer =
-        _dylib.lookup<NativeFunction<_RemovePortNameMappingFunc>>('removePortNameMapping');
-    final removePortNameMapping = removePortNameMappingPointer.asFunction<_RemovePortNameMapping>();
+        _dylib.lookup<NativeFunction<_RemovePortNameMappingFunc>>(
+            'removePortNameMapping');
+    final removePortNameMapping =
+        removePortNameMappingPointer.asFunction<_RemovePortNameMapping>();
     return removePortNameMapping(name.toNativeUtf8()) == 0;
   }
 }
@@ -117,7 +128,8 @@ abstract final class IsolateNameServer {
 typedef _LookupPortByNameFunc = Handle Function(Pointer<Utf8> name);
 typedef _LookupPortByName = Object? Function(Pointer<Utf8> name);
 
-typedef _RegisterPortWithNameFunc = Int Function(Int64 port, Pointer<Utf8> name);
+typedef _RegisterPortWithNameFunc = Int Function(
+    Int64 port, Pointer<Utf8> name);
 typedef _RegisterPortWithName = int Function(int port, Pointer<Utf8> name);
 
 typedef _RemovePortNameMappingFunc = Int Function(Pointer<Utf8> name);

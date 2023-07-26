@@ -11,7 +11,7 @@ void main() async {
 
     if (message == "goodbye") {
       receivePort.close(); // we're done, close port so Dart will exit
-    }    
+    }
   });
 
   final portName = "accumulator";
@@ -24,5 +24,4 @@ void main() async {
   } else {
     throw Exception("could not retrieve named SendPort");
   }
-  
 }
