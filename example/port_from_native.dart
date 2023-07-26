@@ -4,15 +4,18 @@ import 'dart:ffi';
 import 'package:path/path.dart' as path;
 
 typedef _ConvertNativePortToSendPortFunc = Handle Function(Int64 port);
-typedef _ConvertNativePortToSendPort = SendPort Function(int port);
+typedef _ConvertNativePortToSendPort = Object Function(int port);
 
-void main() {
+
+void main() async {
   final ReceivePort receivePort = ReceivePort();
   final SendPort sendPort = receivePort.sendPort;
   final int nativePort = sendPort.nativePort;
 
   receivePort.listen((message) {
     print("message to recv port:$message");
+    
+    receivePort.close(); // we're done, close port so Dart will exit
   });
 
   final DynamicLibrary dylib = _init();
@@ -20,15 +23,14 @@ void main() {
   final SendPort sendPort2 = convertNativePortToSendPort(dylib, nativePort);
 
   sendPort2.send("hi from sendport 2");
-
-  exit(0);
+  
 }
 
-SendPort convertNativePortToSendPort(DynamicLibrary dylib, int nativePort) {
+dynamic convertNativePortToSendPort(DynamicLibrary dylib, int nativePort) {
   final convertNativePortPointer =
       dylib.lookup<NativeFunction<_ConvertNativePortToSendPortFunc>>('convertNativePortToSendPort');
   final convertNativePort = convertNativePortPointer.asFunction<_ConvertNativePortToSendPort>();
-  return convertNativePort(nativePort);
+  return convertNativePort(nativePort) as SendPort;
 }
 
 DynamicLibrary _init() {
