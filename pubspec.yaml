@@ -1,5 +1,5 @@
 name: isolate_name_server
-description: A starting point for Dart libraries or applications.
+description: A registry for SendPorts that can be used across Isolates.
 version: 1.0.0
 # repository: https://github.com/my_org/my_repo
 

@@ -5,7 +5,6 @@
 # Avoid committing pubspec.lock for library packages; see
 # https://dart.dev/guides/libraries/private-files#pubspeclock.
 pubspec.lock
-native/libreturnport.so
 .gitignore
-native/return_port.o
-native/dart_api_dl.o
+native/*.o
+native/*.so
