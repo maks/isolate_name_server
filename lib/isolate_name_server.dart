@@ -1,8 +1,6 @@
-/// Support for doing something awesome.
+/// Isolate Name Server
 ///
-/// More dartdocs go here.
+/// A name registry for SendPorts for use across Isolates.
 library;
 
-export 'src/isolate_name_server_base.dart';
-
-// TODO: Export any libraries intended for clients of this package.
+export 'src/isolate_registry.dart';

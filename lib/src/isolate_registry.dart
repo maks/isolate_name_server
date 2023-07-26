@@ -27,14 +27,26 @@ abstract final class IsolateNameServer {
 
   static DynamicLibrary _init() {
     // Open the dynamic library
-    String libraryPath = path.join(Directory.current.path, 'nameserver_library', 'libnameserver.so');
+    String libraryPath = path.join(Directory.current.path, 'native', 'libnameserver.so');
     if (Platform.isMacOS) {
-      libraryPath = path.join(Directory.current.path, 'nameserver_library', 'libnameserver.dylib');
+      libraryPath = path.join(Directory.current.path, 'native', 'libnameserver.dylib');
     }
     if (Platform.isWindows) {
-      libraryPath = path.join(Directory.current.path, 'nameserver_library', 'Debug', 'libnameserver.dll');
+      libraryPath = path.join(Directory.current.path, 'native', 'Debug', 'libnameserver.dll');
     }
-    return DynamicLibrary.open(libraryPath);
+    final lib = DynamicLibrary.open(libraryPath);
+    // need to call this because our native library makes use of dart_api_dl.h, the Dynamically Linked Dart API
+    // this code comes from:
+    // https://github.com/dart-lang/sdk/blob/main/samples/ffi/sample_ffi_functions_callbacks_closures.dart#L55
+    final initializeApi =
+        lib.lookupFunction<IntPtr Function(Pointer<Void>), int Function(Pointer<Void>)>("Dart_InitializeApiDL");
+
+    final initResult = initializeApi(NativeApi.initializeApiDLData);
+
+    if (initResult != 0) {
+      throw Exception("failed in initialise Dart Native Library Dynamic Link API");
+    }
+    return lib;
   }
 
   /// Looks up the [SendPort] associated with a given name.
@@ -46,7 +58,7 @@ abstract final class IsolateNameServer {
   static SendPort? lookupPortByName(String name) {
     final lookupPortByNamePointer = _dylib.lookup<NativeFunction<_LookupPortByNameFunc>>('lookupPortByName');
     final lookupPortByName = lookupPortByNamePointer.asFunction<_LookupPortByName>();
-    return lookupPortByName(name.toNativeUtf8());
+    return lookupPortByName(name.toNativeUtf8()) as SendPort;
   }
 
   /// Registers a [SendPort] with a given name.
@@ -88,8 +100,8 @@ abstract final class IsolateNameServer {
   }
 }
 
-typedef _LookupPortByNameFunc = Int64 Function(Pointer<Utf8> name);
-typedef _LookupPortByName = int Function(Pointer<Utf8> name);
+typedef _LookupPortByNameFunc = Handle Function(Pointer<Utf8> name);
+typedef _LookupPortByName = Object Function(Pointer<Utf8> name);
 
 typedef _RegisterPortWithNameFunc = Bool Function(Int64 port, Pointer<Utf8> name);
 typedef _RegisterPortWithName = bool Function(int port, Pointer<Utf8> name);
