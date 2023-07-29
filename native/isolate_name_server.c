@@ -7,9 +7,14 @@
 
 static struct hashmap_s hashmap;
 pthread_mutex_t lock;
+int initDone = 0;
 
 int initNameServer() {
-    const unsigned initial_size = 10;    
+    if (initDone == 1) {
+        return 0;
+    }
+    const unsigned initial_size = 10;
+    initDone = 1;   
     return hashmap_create(initial_size, &hashmap);
 }
 

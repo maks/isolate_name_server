@@ -74,7 +74,6 @@ abstract final class IsolateNameServer {
     final lookupPortByName =
         lookupPortByNamePointer.asFunction<_LookupPortByName>();
     final port = lookupPortByName(name.toNativeUtf8());
-    print("port: $port");
     if (port != null) {
       return port as SendPort;
     } else {

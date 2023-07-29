@@ -55,5 +55,25 @@ void main() {
       final found = IsolateNameServer.lookupPortByName(portName);
       expect(found, isNull);
     });
+
+    test('lookup works across Isolates', () async {
+      final portName = "tester";
+      ReceivePort rp = ReceivePort();
+      IsolateNameServer.registerPortWithName(rp.sendPort, portName);
+
+      Isolate.spawn((_) {
+        final found = IsolateNameServer.lookupPortByName(portName);
+        found?.send("x");
+      }, null);
+
+      expect(IsolateNameServer.lookupPortByName(portName), isNotNull);
+
+      bool gotMesg = false;
+      rp.listen((message) => gotMesg = true);
+
+      await Future.delayed(Duration(seconds: 1));
+
+      expect(gotMesg, isTrue);
+    });
   });
 }
