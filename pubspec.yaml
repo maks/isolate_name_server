@@ -1,6 +1,6 @@
 name: isolate_name_server
 description: A registry for SendPorts that can be used across Isolates.
-version: 1.0.1
+version: 1.1.0
 repository: https://github.com/maks/isolate_name_server
 
 environment:
